@@ -55,18 +55,18 @@ def main():
         useremail = user_service.get('emailAddresses')[0].get('value')
         exp = datetime.utcnow() + timedelta(days=1)
         
-        payload ={
-                'name': username,
-                'email': useremail,
-                'exp': exp
-                }
-        personal_token = generate_jwt(payload)
+        # payload ={
+        #         'name': username,
+        #         'email': useremail,
+        #         'exp': exp
+        #         }
+        # personal_token = generate_jwt(payload)
         
         user_infos = {
             'profile': {
                 'name': username,
                 'email': useremail,
-                'token': personal_token,
+                # 'token': personal_token,
                 }}
 
         domains = set([])
