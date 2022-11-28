@@ -2,16 +2,16 @@ from __future__ import print_function
 
 import os
 import json
-from datetime import datetime, timedelta
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from src.app.utils import generate_jwt
+
 
 CLIENT_SECRETS_FILENAME = os.getenv('GOOGLE_CLIENT_SECRETS')
 SECRET_KEY = os.getenv('SECRET_KEY')
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = [
     "openid",
@@ -53,20 +53,11 @@ def main():
         user_service = service.people().get(resourceName='people/me', personFields='names,emailAddresses').execute()
         username = user_service.get('names')[0].get('displayName')
         useremail = user_service.get('emailAddresses')[0].get('value')
-        exp = datetime.utcnow() + timedelta(days=1)
-        
-        # payload ={
-        #         'name': username,
-        #         'email': useremail,
-        #         'exp': exp
-        #         }
-        # personal_token = generate_jwt(payload)
         
         user_infos = {
             'profile': {
                 'name': username,
                 'email': useremail,
-                # 'token': personal_token,
                 }}
 
         domains = set([])

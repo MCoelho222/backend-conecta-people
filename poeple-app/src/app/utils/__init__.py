@@ -12,7 +12,7 @@ def generate_jwt(payload):
 
 def verify_token(token):
     try:
-        decode(token, current_app.config["SECRET_KEY"], "HS256")
-        return True
+        tokenCheck = decode(token, current_app.config["SECRET_KEY"], "HS256")
+        return tokenCheck['email_verified']
     except Exception:
         return False

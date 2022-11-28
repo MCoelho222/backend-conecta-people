@@ -1,21 +1,19 @@
 import os
 import json
 import requests
-
-# from bson import json_util
+from bson import json_util
 from flask import Blueprint
 from flask.wrappers import Response
-from flask import request, jsonify, current_app
+from flask import request, current_app
 from flask.globals import session
 from google import auth
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from werkzeug.utils import redirect
-from datetime import datetime, timedelta, timezone
-
-# from src.app import mongo_client
+from datetime import datetime, timedelta
+from src.app.utils import verify_token
 from src.app.utils import generate_jwt
-from src.app.middlewares.auth import has_logged, user_exists, required_fields, has_not_logged
+
 
 CLIENT_SECRETS_FILENAME = os.getenv('GOOGLE_CLIENT_SECRETS')
 SCOPES = [
@@ -38,7 +36,6 @@ flow = Flow.from_client_config(
 
 
 @users.route("/auth/google", methods=["POST"])
-# @has_not_logged()
 def auth_google():
     authorization_url, state = flow.authorization_url()
     session["state"] = state
@@ -69,7 +66,32 @@ def callback():
     session["google_id"] = user_google_dict.get("sub")
     del user_google_dict["aud"]
     del user_google_dict["azp"]
+    user_google_dict['exp'] = datetime.utcnow() + timedelta(days=1)
 
     token = generate_jwt(user_google_dict)
 
     return redirect(f"{current_app.config['FRONTEND_URL']}/#/people/{token}")
+
+
+@users.route("/verify/", methods=['GET'])
+def auth_jwt():
+    token = request.args.get('token')
+    check_token = verify_token(token)
+    if check_token:
+        response = {'status': 'true'}
+    else:
+        response = {'status': 'false'}
+    return Response(
+        response=json_util.dumps(response),
+        status=201,
+        mimetype="application/json")
+
+
+@users.route("/logout", methods=['GET'])
+def user_logout():
+    try:
+        if os.path.exists('token.json'):
+            os.remove('token.json')
+            return {'success': 'Token removed.'}, 200
+    except Exception:
+        return {"error": "Token could not be removed."}, 500
